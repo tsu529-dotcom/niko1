@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="人工集計">
+<title>職人 人工集計</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Hiragino Kaku Gothic ProN',sans-serif;background:#E8F0FB;color:#1a2a4a;}
+.app{max-width:540px;margin:0 auto;padding:12px;}
+.header{background:#1a4fa0;border-radius:12px;padding:13px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.header-title{font-size:16px;font-weight:700;color:#fff;}
+.header-total{font-size:13px;color:#a8c8ff;font-weight:600;}
+.tabs{display:flex;gap:5px;margin-bottom:12px;}
+.tab{flex:1;padding:9px 0;border-radius:10px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;text-align:center;background:#c2d5f0;border:none;color:#3a5a90;}
+.tab.on{background:#1a4fa0;color:#fff;box-shadow:0 2px 6px rgba(26,79,160,.3);}
+.pane{display:none;}.pane.on{display:block;}
+.card{background:#fff;border:0.5px solid #b8d0ee;border-radius:12px;padding:14px;margin-bottom:10px;}
+.lbl{font-size:12px;color:#5a7aaa;margin-bottom:7px;font-weight:500;}
+.row{display:flex;gap:8px;margin-bottom:10px;}
+input[type=date],input[type=text]{background:#f0f6ff;border:0.5px solid #b8d0ee;border-radius:8px;color:#1a2a4a;padding:10px;font-size:15px;font-family:inherit;outline:none;width:100%;}
+select{background:#f0f6ff;border:0.5px solid #b8d0ee;border-radius:8px;color:#1a2a4a;padding:10px;font-size:15px;font-family:inherit;outline:none;}
+.cgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:10px;}
+.cb{padding:9px 0;background:#f0f6ff;border:0.5px solid #b8d0ee;border-radius:8px;color:#3a5a90;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;text-align:center;}
+.cb.on{background:#1a4fa0;border-color:#1a4fa0;color:#fff;}
+.nrow{display:flex;gap:5px;margin-bottom:10px;}
+.nb{flex:1;padding:9px 0;background:#f0f6ff;border:0.5px solid #b8d0ee;border-radius:8px;color:#3a5a90;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;}
+.nb.on{background:#1a4fa0;border-color:#1a4fa0;color:#fff;}
+.name-row{display:flex;gap:8px;margin-bottom:6px;}
+.name-row input{flex:1;font-size:16px;}
+.micbtn{width:44px;height:44px;border-radius:50%;border:0.5px solid #b8d0ee;background:#f0f6ff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.micbtn.on{background:#E24B4A;border-color:#E24B4A;}
+.mst{font-size:12px;color:#5a7aaa;margin-bottom:8px;min-height:16px;}
+.addbtn{width:100%;padding:12px;font-size:14px;font-weight:700;border:none;border-radius:10px;background:#1a4fa0;color:#fff;cursor:pointer;font-family:inherit;letter-spacing:.03em;}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+.met{background:#1a4fa0;border-radius:10px;padding:10px 12px;}
+.metl{font-size:11px;color:#a8c8ff;margin-bottom:3px;}
+.metv{font-size:22px;font-weight:700;color:#fff;}
+.rec{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid #dce8f8;}
+.rec:last-child{border-bottom:none;}
+.bdg{font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap;}
+.rn{flex:1;font-size:14px;}
+.rv{font-size:14px;font-weight:600;color:#1a4fa0;}
+/* カレンダー */
+.cal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.cal-nav{background:#f0f6ff;border:0.5px solid #b8d0ee;border-radius:8px;padding:6px 16px;font-size:16px;cursor:pointer;color:#1a4fa0;}
+.cal-mo{font-size:15px;font-weight:700;color:#1a2a4a;}
+.cgd{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.dow{font-size:11px;color:#5a7aaa;text-align:center;padding:3px 0;}
+.day{min-height:48px;border-radius:8px;display:flex;flex-direction:column;align-items:center;padding:4px 1px;cursor:pointer;border:0.5px solid #dce8f8;background:#fff;}
+.day.empty{background:transparent;border-color:transparent;cursor:default;}
+.day.has{background:#dce8f8;border-color:#1a4fa0;}
+.day.sel{background:#1a4fa0;border:2px solid #0d3070;}
+.day.tod .dn{text-decoration:underline;font-weight:700;}
+.dn{font-size:12px;color:#1a2a4a;}
+.day.has .dn{color:#1a4fa0;font-weight:600;}
+.day.sel .dn{color:#fff;font-weight:700;}
+.dnk{font-size:10px;color:#1a4fa0;font-weight:600;margin-top:1px;}
+.day.sel .dnk{color:#a8c8ff;}
+.dpips{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;margin-top:2px;}
+.pip{width:5px;height:5px;border-radius:50%;background:#1a4fa0;}
+.day.sel .pip{background:#a8c8ff;}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:#5a7aaa;margin-bottom:8px;}
+.legbox{width:12px;height:12px;border-radius:2px;background:#dce8f8;border:1.5px solid #1a4fa0;flex-shrink:0;}
+.det{background:#fff;border:0.5px solid #b8d0ee;border-radius:12px;padding:14px;margin-bottom:10px;}
+.det-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.det-ti{font-size:14px;font-weight:600;color:#1a2a4a;}
+.xbtn{background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;padding:0 4px;}
+.sumrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;padding-top:10px;border-top:0.5px solid #dce8f8;}
+/* 現場別 */
+.sc{background:#fff;border:0.5px solid #b8d0ee;border-radius:12px;margin-bottom:10px;overflow:hidden;}
+.sc-head{display:flex;align-items:center;justify-content:space-between;padding:14px;cursor:pointer;user-select:none;}
+.sc-head:active{background:#f0f6ff;}
+.sc-name{font-size:15px;font-weight:600;color:#1a2a4a;}
+.sc-summary{display:flex;align-items:center;gap:10px;}
+.sc-total{font-size:14px;font-weight:700;color:#1a4fa0;}
+.sc-arrow{font-size:14px;color:#5a7aaa;transition:transform 0.2s;}
+.sc-arrow.open{transform:rotate(180deg);}
+.sc-body{display:none;border-top:0.5px solid #dce8f8;padding:12px 14px 14px;}
+.sc-body.open{display:block;}
+.craft-hint{font-size:11px;color:#8aaacc;margin-bottom:10px;}
+.crow{display:flex;align-items:center;padding:8px 0;border-bottom:0.5px solid #eef4fc;}
+.crow:last-of-type{border-bottom:none;}
+.cbw{flex:1;margin:0 10px;height:7px;background:#e8f0fb;border-radius:4px;overflow:hidden;}
+.cbar{height:100%;border-radius:4px;}
+.crow-val{font-size:13px;font-weight:600;min-width:52px;text-align:right;color:#1a4fa0;}
+.crow-cnt{font-size:11px;color:#8aaacc;min-width:28px;text-align:right;margin-left:4px;}
+.stot{display:flex;justify-content:space-between;font-size:14px;font-weight:700;padding-top:10px;border-top:0.5px solid #b8d0ee;margin-top:4px;color:#1a4fa0;}
+/* 工種別 */
+.craft-summary-card{background:#fff;border:0.5px solid #b8d0ee;border-radius:12px;padding:14px;margin-bottom:10px;}
+.craft-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.craft-total{font-size:22px;font-weight:700;color:#1a4fa0;}
+.craft-sub{font-size:12px;color:#5a7aaa;margin-top:1px;}
+.site-row{display:flex;align-items:center;padding:7px 0;border-bottom:0.5px solid #eef4fc;font-size:13px;}
+.site-row:last-child{border-bottom:none;}
+.site-row-name{flex:1;color:#3a5a7a;}
+.site-row-bar-wrap{width:80px;height:6px;background:#e8f0fb;border-radius:3px;overflow:hidden;margin:0 10px;}
+.site-row-bar{height:100%;border-radius:3px;}
+.site-row-val{font-size:13px;font-weight:600;min-width:44px;text-align:right;color:#1a4fa0;}
+.empty{font-size:13px;color:#8aaacc;text-align:center;padding:24px 0;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <span class="header-title">🏗 職人 人工集計</span>
+    <span class="header-total" id="ht"></span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" onclick="go('input')">入力</button>
+    <button class="tab" onclick="go('cal')">カレンダー</button>
+    <button class="tab" onclick="go('site')">現場別</button>
+    <button class="tab" onclick="go('craft')">工種別</button>
+  </div>
+
+  <!-- 入力 -->
+  <div id="p-input" class="pane on">
+    <div class="card">
+      <div class="lbl">日付・現場</div>
+      <div class="row">
+        <input type="date" id="di" style="flex:1;">
+        <select id="si" style="flex:1.2;background:#f8f8f8;border:0.5px solid #ddd;border-radius:8px;color:#222;padding:10px;font-size:15px;font-family:inherit;outline:none;">
+          <option value="">現場を選択</option>
+        </select>
+      </div>
+      <div class="row" id="new-site-row" style="display:none;">
+        <input type="text" id="si-new" placeholder="新しい現場名を入力" style="flex:1;font-size:15px;">
+        <button onclick="addSite()" style="padding:10px 14px;border:none;border-radius:8px;background:#1a4fa0;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">追加</button>
+        <button onclick="cancelNewSite()" style="padding:10px 10px;border:0.5px solid #ddd;border-radius:8px;background:#f8f8f8;color:#666;font-size:13px;cursor:pointer;font-family:inherit;">✕</button>
+      </div>
+      <div class="lbl">職種</div>
+      <div class="cgrid" id="cg"></div>
+      <div class="lbl">人工数</div>
+      <div class="nrow" id="ng"></div>
+      <div class="lbl">氏名</div>
+      <div class="name-row">
+        <input type="text" id="ni" placeholder="例：山田" autocomplete="off">
+        <button class="micbtn" id="mb" onclick="doMic()">🎤</button>
+      </div>
+      <div class="mst" id="ms"></div>
+      <button class="addbtn" onclick="addRec()">＋ 追加する</button>
+    </div>
+    <div class="metrics" id="met"></div>
+    <div class="card" id="ts" style="display:none;">
+      <div class="lbl" id="tl"></div>
+      <div id="tlist"></div>
+    </div>
+  </div>
+
+  <!-- カレンダー -->
+  <div id="p-cal" class="pane">
+    <div class="card">
+      <div class="cal-hd">
+        <button class="cal-nav" onclick="mv(-1)">&#8249;</button>
+        <span class="cal-mo" id="cmo"></span>
+        <button class="cal-nav" onclick="mv(1)">&#8250;</button>
+      </div>
+      <div class="leg"><div class="legbox"></div>記録あり（数字＝合計人工数・点＝人数）</div>
+      <div class="cgd" id="cgd"></div>
+    </div>
+    <div id="dd"></div>
+  </div>
+
+  <!-- 現場別 -->
+  <div id="p-site" class="pane">
+    <div class="metrics" id="smet"></div>
+    <div style="font-size:12px;color:#888;margin-bottom:8px;padding-left:2px;">▼ 現場名をタップすると工種別の詳細が開きます</div>
+    <div id="sl"></div>
+  </div>
+
+  <!-- 工種別 -->
+  <div id="p-craft" class="pane">
+    <div class="metrics" id="cmet"></div>
+    <div id="cl"></div>
+  </div>
+</div>
+
+<script>
+const CRAFTS=['解体','基礎','大工','水道','電気','板金','外装','内装','塗装','外構','その他'];
+const BG={'大工':'#FAC775','左官':'#B5D4F4','電気':'#C0DD97','水道':'#9FE1CB','板金':'#D3D1C7','基礎':'#FAEEDA','塗装':'#F5C4B3','内装':'#CECBF6','外構':'#9FE1CB','外装':'#EEEDFE','解体':'#F4C0D1','その他':'#D3D1C7'};
+const TC={'大工':'#633806','左官':'#042C53','電気':'#173404','水道':'#04342C','板金':'#2C2C2A','基礎':'#633806','塗装':'#4A1B0C','内装':'#26215C','外構':'#085041','外装':'#26215C','解体':'#4B1528','その他':'#444441'};
+const BAR={'大工':'#BA7517','左官':'#185FA5','電気':'#3B6D11','水道':'#0F6E56','板金':'#5F5E5A','基礎':'#854F0B','塗装':'#993C1D','内装':'#534AB7','外構':'#0F6E56','外装':'#534AB7','解体':'#993556','その他':'#5F5E5A'};
+
+let recs=[],craft='解体',niko='1',yr,mo,selDay=null,recog=null,micon=false;
+let sites=[];
+
+function updateSiteSelect(){
+  const sel=document.getElementById('si');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">現場を選択</option>'
+    +sites.map(s=>'<option value="'+s+'"'+(s===cur?' selected':'')+'>'+s+'</option>').join('')
+    +'<option value="__new__">＋ 新規追加...</option>';
+}
+
+function addSite(){
+  const val=document.getElementById('si-new').value.trim();
+  if(!val) return;
+  if(!sites.includes(val)) sites.push(val);
+  updateSiteSelect();
+  document.getElementById('si').value=val;
+  document.getElementById('si-new').value='';
+  document.getElementById('new-site-row').style.display='none';
+}
+
+function cancelNewSite(){
+  document.getElementById('si-new').value='';
+  document.getElementById('new-site-row').style.display='none';
+  document.getElementById('si').value='';
+}
+
+document.addEventListener('change',function(e){
+  if(e.target.id==='si' && e.target.value==='__new__'){
+    e.target.value='';
+    document.getElementById('new-site-row').style.display='flex';
+    document.getElementById('si-new').focus();
+  }
+});
+const now=new Date();
+yr=now.getFullYear(); mo=now.getMonth();
+document.getElementById('di').value=now.toISOString().split('T')[0];
+
+function bdg(c){return '<span class="bdg" style="background:'+BG[c]+';color:'+TC[c]+'">'+c+'</span>';}
+
+// 職種ボタン
+const cg=document.getElementById('cg');
+CRAFTS.forEach(c=>{
+  const b=document.createElement('button');
+  b.className='cb'+(c==='大工'?' on':'');
+  b.textContent=c;
+  b.onclick=()=>{craft=c;document.querySelectorAll('.cb').forEach(x=>x.classList.remove('on'));b.classList.add('on');};
+  cg.appendChild(b);
+});
+
+// 人工数ボタン
+const ng=document.getElementById('ng');
+['0.5','1','1.5','2','2.5'].forEach(v=>{
+  const b=document.createElement('button');
+  b.className='nb'+(v==='1'?' on':'');
+  b.textContent=v;
+  b.onclick=()=>{niko=v;document.querySelectorAll('.nb').forEach(x=>x.classList.remove('on'));b.classList.add('on');};
+  ng.appendChild(b);
+});
+
+// 音声入力
+function doMic(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const st=document.getElementById('ms');
+  if(!SR){st.textContent='音声入力はSafari(iOS16以上)またはChromeで対応';return;}
+  if(micon){recog&&recog.stop();return;}
+  recog=new SR(); recog.lang='ja-JP'; recog.continuous=false; recog.interimResults=true;
+  recog.onstart=()=>{micon=true;document.getElementById('mb').classList.add('on');st.textContent='聞いています…';};
+  recog.onend=()=>{micon=false;document.getElementById('mb').classList.remove('on');};
+  recog.onresult=e=>{
+    const t=Array.from(e.results).map(r=>r[0].transcript).join('');
+    if(e.results[0].isFinal){
+      const cl=t.replace(/[0-9０-９.．人工にんく]/g,'').replace(/大工|左官|電気|水道|板金|塗装|内装|外構|解体|その他/g,'').trim();
+      const nm=cl.match(/[\u4e00-\u9fa5\u3040-\u30ff]+/)?.[0]||cl;
+      if(nm){document.getElementById('ni').value=nm;st.textContent='「'+nm+'」と認識';}
+      CRAFTS.forEach(c=>{if(t.includes(c)){craft=c;document.querySelectorAll('.cb').forEach(x=>x.classList.toggle('on',x.textContent===c));}});
+      const m=t.match(/([0-9０-９.．]+)\s*[人にnN工]/);
+      if(m){const v=String(parseFloat(m[1].replace(/[０-９]/g,c2=>String.fromCharCode(c2.charCodeAt(0)-0xFEE0))));niko=v;document.querySelectorAll('.nb').forEach(x=>x.classList.toggle('on',x.textContent===v));}
+    }
+  };
+  recog.onerror=e=>{
+    const msg={'not-allowed':'マイクを許可してください（設定→Safari→マイク）','no-speech':'もう一度お試しください','network':'ネットワークエラー'};
+    document.getElementById('ms').textContent=msg[e.error]||'エラー: '+e.error;
+  };
+  recog.start();
+}
+
+// 記録追加
+function addRec(){
+  const name=document.getElementById('ni').value.trim();
+  const site=document.getElementById("si").value;
+  if(!name){alert('氏名を入力してください');return;}
+  if(!site||site==="__new__"){alert("現場を選択してください");return;}
+  recs.push({id:Date.now(),date:document.getElementById('di').value,site,name,craft,niko:parseFloat(niko)});
+  if(!sites.includes(site)) sites.push(site);
+  updateSiteSelect();
+  document.getElementById("si").value=site;
+  document.getElementById("ni").value="";
+  document.getElementById('ms').textContent='';
+  renderInput();
+  if(document.getElementById('p-cal').classList.contains('on')) renderCal();
+  if(document.getElementById('p-site').classList.contains('on')) renderSite();
+  if(document.getElementById('p-craft').classList.contains('on')) renderCraft();
+}
+
+// ── 入力 ──
+function renderInput(){
+  const d=document.getElementById('di').value;
+  const td=recs.filter(r=>r.date===d);
+  const tot=recs.reduce((a,b)=>a+b.niko,0);
+  const sites=[...new Set(recs.map(r=>r.site))].length;
+  const days=[...new Set(recs.map(r=>r.date))].length;
+  document.getElementById('ht').textContent=tot>0?'計 '+tot+' 人工':'';
+  document.getElementById('met').innerHTML=
+    '<div class="met"><div class="metl">総人工数</div><div class="metv">'+tot+'</div></div>'+
+    '<div class="met"><div class="metl">延べ日数</div><div class="metv">'+days+'</div></div>'+
+    '<div class="met"><div class="metl">現場数</div><div class="metv">'+sites+'</div></div>';
+  const sec=document.getElementById('ts');
+  if(!td.length){sec.style.display='none';return;}
+  sec.style.display='';
+  document.getElementById('tl').textContent=d+'の記録（'+td.length+'件）';
+  document.getElementById('tlist').innerHTML=td.map(r=>'<div class="rec">'+bdg(r.craft)+'<span class="rn">'+r.name+'</span><span class="rv">'+r.niko+'人工</span></div>').join('');
+}
+
+// ── カレンダー ──
+function renderCal(){
+  const ts=now.toISOString().split('T')[0];
+  document.getElementById('cmo').textContent=yr+'年'+(mo+1)+'月';
+  const first=new Date(yr,mo,1).getDay();
+  const dim=new Date(yr,mo+1,0).getDate();
+  let h=['日','月','火','水','木','金','土'].map(d=>'<div class="dow">'+d+'</div>').join('');
+  for(let i=0;i<first;i++) h+='<div class="day empty"></div>';
+  for(let d=1;d<=dim;d++){
+    const ds=yr+'-'+String(mo+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const dr=recs.filter(r=>r.date===ds);
+    const tot=dr.reduce((a,b)=>a+b.niko,0);
+    const hasD=dr.length>0,isT=ds===ts,isS=ds===selDay;
+    let cls='day';
+    if(hasD) cls+=' has';
+    if(isS) cls+=' sel';
+    if(isT) cls+=' tod';
+    h+='<div class="'+cls+'" onclick="selD(\''+ds+'\')">'
+      +'<span class="dn">'+d+'</span>'
+      +(hasD?'<span class="dnk">'+tot+'人工</span><div class="dpips">'+'<div class="pip"></div>'.repeat(Math.min(dr.length,6))+'</div>':'')
+      +'</div>';
+  }
+  document.getElementById('cgd').innerHTML=h;
+  renderDet();
+}
+function selD(ds){selDay=(selDay===ds)?null:ds;renderCal();}
+function renderDet(){
+  const det=document.getElementById('dd');
+  if(!selDay){det.innerHTML='';return;}
+  const dr=recs.filter(r=>r.date===selDay);
+  if(!dr.length){det.innerHTML='';return;}
+  const tot=dr.reduce((a,b)=>a+b.niko,0);
+  const bc={};dr.forEach(r=>{bc[r.craft]=(bc[r.craft]||0)+r.niko;});
+  det.innerHTML='<div class="det"><div class="det-hd"><span class="det-ti">'+selDay+'　'+dr.length+'名・計 '+tot+' 人工</span>'
+    +'<button class="xbtn" onclick="selDay=null;renderCal();">✕</button></div>'
+    +dr.map(r=>'<div class="rec">'+bdg(r.craft)+'<span class="rn">'+r.name+'</span><span class="rv">'+r.niko+'人工</span></div>').join('')
+    +'<div class="sumrow">'+Object.entries(bc).map(([c,v])=>'<span style="font-size:12px;color:#3a5a7a;display:flex;align-items:center;gap:4px;">'+bdg(c)+' '+v+'人工</span>').join('')+'</div></div>';
+}
+function mv(d){mo+=d;if(mo>11){mo=0;yr++;}if(mo<0){mo=11;yr--;}selDay=null;renderCal();}
+
+// ── 現場別（タップで工種詳細開閉） ──
+function renderSite(){
+  const sites=[...new Set(recs.map(r=>r.site))];
+  const tot=recs.reduce((a,b)=>a+b.niko,0);
+  const days=[...new Set(recs.map(r=>r.date))].length;
+  document.getElementById('smet').innerHTML=
+    '<div class="met"><div class="metl">総人工数</div><div class="metv">'+tot+'</div></div>'+
+    '<div class="met"><div class="metl">現場数</div><div class="metv">'+sites.length+'</div></div>'+
+    '<div class="met"><div class="metl">稼働日数</div><div class="metv">'+days+'</div></div>';
+  if(!sites.length){document.getElementById('sl').innerHTML='<div class="empty">記録がありません</div>';return;}
+
+  document.getElementById('sl').innerHTML=sites.map((site,idx)=>{
+    const sr=recs.filter(r=>r.site===site);
+    const t=sr.reduce((a,b)=>a+b.niko,0);
+    const bc={};sr.forEach(r=>{bc[r.craft]=(bc[r.craft]||0)+r.niko;});
+    const mx=Math.max(...Object.values(bc));
+    const craftUsed=CRAFTS.filter(c=>bc[c]);
+
+    // 閉じた状態：工種バッジを横並びで小さく表示
+    const badgeSummary=craftUsed.map(c=>'<span class="bdg" style="background:'+BG[c]+';color:'+TC[c]+';font-size:10px;padding:2px 6px;">'+c+'</span>').join(' ');
+
+    // 工種別詳細rows
+    const craftRows=craftUsed.map(c=>{
+      const v=bc[c];
+      const cnt=sr.filter(r=>r.craft===c).length;
+      return '<div class="crow">'+bdg(c)
+        +'<div class="cbw"><div class="cbar" style="width:'+Math.round(v/mx*100)+'%;background:'+BAR[c]+'"></div></div>'
+        +'<span class="crow-val">'+v+'人工</span>'
+        +'<span class="crow-cnt">'+cnt+'名</span>'
+        +'</div>';
+    }).join('');
+
+    return '<div class="sc">'
+      // ヘッダー（タップで開閉）
+      +'<div class="sc-head" onclick="toggleSite(\'site-'+idx+'\')">'
+        +'<div>'
+          +'<div class="sc-name">'+site+'</div>'
+          +'<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:5px;">'+badgeSummary+'</div>'
+        +'</div>'
+        +'<div class="sc-summary">'
+          +'<span class="sc-total">'+t+'人工</span>'
+          +'<span class="sc-arrow" id="arr-'+idx+'">▼</span>'
+        +'</div>'
+      +'</div>'
+      // 詳細（閉じている）
+      +'<div class="sc-body" id="site-'+idx+'">'
+        +'<div class="craft-hint">工種別内訳（人数は延べ人数）</div>'
+        +craftRows
+        +'<div class="stot"><span>合計</span><span>'+t+'人工</span></div>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+
+function toggleSite(id){
+  const body=document.getElementById(id);
+  const idx=id.replace('site-','');
+  const arr=document.getElementById('arr-'+idx);
+  const isOpen=body.classList.contains('open');
+  body.classList.toggle('open',!isOpen);
+  arr.classList.toggle('open',!isOpen);
+}
+
+// ── 工種別 ──
+function renderCraft(){
+  const tot=recs.reduce((a,b)=>a+b.niko,0);
+  const craftList=CRAFTS.filter(c=>recs.some(r=>r.craft===c));
+  const days=[...new Set(recs.map(r=>r.date))].length;
+  document.getElementById('cmet').innerHTML=
+    '<div class="met"><div class="metl">総人工数</div><div class="metv">'+tot+'</div></div>'+
+    '<div class="met"><div class="metl">工種数</div><div class="metv">'+craftList.length+'</div></div>'+
+    '<div class="met"><div class="metl">稼働日数</div><div class="metv">'+days+'</div></div>';
+  if(!craftList.length){document.getElementById('cl').innerHTML='<div class="empty">記録がありません</div>';return;}
+
+  const craftTotals=craftList.map(c=>recs.filter(r=>r.craft===c).reduce((a,b)=>a+b.niko,0));
+  const maxTotal=Math.max(...craftTotals);
+
+  document.getElementById('cl').innerHTML=craftList.map((c,i)=>{
+    const cr=recs.filter(r=>r.craft===c);
+    const ctot=cr.reduce((a,b)=>a+b.niko,0);
+    const cnt=cr.length;
+    const sitesForCraft=[...new Set(cr.map(r=>r.site))];
+    const bySite={};
+    cr.forEach(r=>{bySite[r.site]=(bySite[r.site]||0)+r.niko;});
+    const mxSite=Math.max(...Object.values(bySite));
+
+    return '<div class="craft-summary-card">'
+      +'<div class="craft-head">'+bdg(c)
+        +'<div>'
+          +'<div class="craft-total">'+ctot+' 人工</div>'
+          +'<div class="craft-sub">延べ '+cnt+' 名　現場 '+sitesForCraft.length+' か所</div>'
+        +'</div>'
+        +'<div style="margin-left:auto;height:8px;width:90px;background:#dce8f8;border-radius:4px;overflow:hidden;align-self:center;">'
+          +'<div style="height:100%;border-radius:4px;background:'+BAR[c]+';width:'+Math.round(ctot/maxTotal*100)+'%"></div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="font-size:11px;color:#5a7aaa;margin-bottom:6px;">現場別内訳</div>'
+      +Object.entries(bySite).map(([s,v])=>
+        '<div class="site-row">'
+          +'<span class="site-row-name">'+s+'</span>'
+          +'<div class="site-row-bar-wrap"><div class="site-row-bar" style="width:'+Math.round(v/mxSite*100)+'%;background:'+BAR[c]+'"></div></div>'
+          +'<span class="site-row-val">'+v+'人工</span>'
+        +'</div>'
+      ).join('')
+    +'</div>';
+  }).join('');
+}
+
+// ── タブ切り替え ──
+function go(tab){
+  ['input','cal','site','craft'].forEach(t=>document.getElementById('p-'+t).classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('p-'+tab).classList.add('on');
+  document.querySelectorAll('.tab')[['input','cal','site','craft'].indexOf(tab)].classList.add('on');
+  if(tab==='cal') renderCal();
+  if(tab==='site') renderSite();
+  if(tab==='craft') renderCraft();
+}
+
+renderInput();
+updateSiteSelect();
+</script>
+</body>
+</html>
